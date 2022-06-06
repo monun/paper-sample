@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version Dependency.Kotlin.Version
-    id("io.papermc.paperweight.userdev") version "1.3.5-SNAPSHOT"
+    id("io.papermc.paperweight.userdev") version "1.3.6"
 }
 
 java {
