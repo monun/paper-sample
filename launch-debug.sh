@@ -1,11 +1,11 @@
-  #!/bin/bash
+#!/bin/bash
 
 ########################## Configurations ##########################
 
 # Server directory name
-NAME=".debug-server"
-# Server type (type[vanilla, spigot, paper]-version[1.xx.x, unspecified]-build[latest, unspecified, xx])
-SERVER="paper-1.19-latest"
+NAME="server"
+# Server type (local path or type[vanilla, spigot, paper]-version[1.xx.x, unspecified]-build[latest, unspecified, xx])
+SERVER="paper-1.19-unspecified"
 # Server memory (GB)
 MEMORY=2
 # jdwp port, Enable debug mode when 0 or higher (5005)
@@ -34,15 +34,18 @@ PLUGINS=(
 mkdir -p "$NAME"
 cd "$NAME" || exit
 
+# Check local path
+if [[ -f $SERVER ]]; then
+  JAR=$SERVER
 # Setup server
-if [[ -f ../setup.sh ]]; then
+elif [[ -f ../setup.sh ]]; then
   JAR=$(../setup.sh "$SERVER" | tail)
 else
   JAR=$(curl -s "https://raw.githubusercontent.com/monun/minecraft-server-launcher/master/setup.sh" | bash -s -- "$SERVER" | tail)
 fi
 
 # Exit if jar not found
-[[ ! -f $JAR ]] && echo "Jar not found for $SERVER" && exit
+[[ ! -f $JAR ]] && echo "Jar not found for $SERVER - $JAR" && exit
 
 # Download plugins (Only if it's not vanilla)
 if [[ $SERVER != vanilla* ]]; then
@@ -56,7 +59,7 @@ fi
 if [[ -f ../start.sh ]]; then
   cp ../start.sh .
 else
-  wget -q -c --content-disposition -P . -N "https://raw.githubusercontent.com/monun/minecraft-server-launcher/master/start.sh" > /dev/null
+  wget -q -c --content-disposition -P . -N "https://raw.githubusercontent.com/monun/minecraft-server-launcher/master/start.sh" >/dev/null
 fi
 
 # Export variables for start.sh
@@ -67,4 +70,5 @@ export BACKUP
 export RESTART
 
 # Run server
+chmod +x ./start.sh
 ./start.sh launch
