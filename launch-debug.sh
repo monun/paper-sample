@@ -3,7 +3,7 @@
 ########################## Configurations ##########################
 
 # Server directory name
-NAME="server"
+NAME=".debug-server"
 # Server type (local path or type[vanilla, spigot, paper]-version[1.xx.x, unspecified]-build[latest, unspecified, xx])
 SERVER="paper-1.19-unspecified"
 # Server memory (GB)
