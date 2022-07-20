@@ -1,6 +1,6 @@
 plugins {
     kotlin("jvm") version Dependency.Kotlin.Version
-    id("io.papermc.paperweight.userdev") version "1.3.7"
+    id("io.papermc.paperweight.userdev") version "1.3.8"
 }
 
 java {
@@ -25,7 +25,6 @@ val pluginName = rootProject.name.split('-').joinToString("") { it.capitalize() 
 extra.apply {
     set("pluginName", pluginName)
     set("packageName", rootProject.name.replace("-", ""))
-
     set("kotlinVersion", Dependency.Kotlin.Version)
 }
 
