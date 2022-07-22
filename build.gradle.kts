@@ -37,16 +37,22 @@ tasks {
         }
     }
 
-    register<Copy>("paperJar") {
-        from(reobfJar)
+    register<Copy>("debugJar") {
+        from(jar)
 
-        val jarName = "$pluginName.jar"
-        rename { jarName }
-        val plugins = File("./.debug-server/plugins")
-        val plugin = File(plugins, "$pluginName.jar")
+        val baseName = jar.get().archiveBaseName.get()
+        val pluginsDirectory = File(".debug-server/plugins")
+        val plugins = pluginsDirectory.listFiles { file: File -> file.isFile && file.name.endsWith(".jar") }
+            ?: emptyArray()
 
-        if (plugin.exists())    into(File(plugins, "update"))
-        else                    into(plugins)
+        if (plugins.none { it.name.startsWith(baseName) }) into(plugins)
+        else {
+            val updateDirectory = File(pluginsDirectory, "update")
+            into(updateDirectory)
+            doLast {
+                File(updateDirectory, "UPDATE").createNewFile()
+            }
+        }
     }
 }
 

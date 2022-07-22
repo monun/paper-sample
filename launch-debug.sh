@@ -1,11 +1,10 @@
 #!/bin/bash
 
 ########################## Configurations ##########################
-
 # Server directory name
 NAME=".debug-server"
 # Server type (local path or type[vanilla, spigot, paper]-version[1.xx.x, unspecified]-build[latest, unspecified, xx])
-SERVER="paper-1.19-unspecified"
+SERVER="paper-dev.jar"
 # Server memory (GB)
 MEMORY=2
 # jdwp port, Enable debug mode when 0 or higher (5005)
@@ -16,36 +15,36 @@ BACKUP=false
 RESTART=false
 # Preinstallation plugins (url)
 PLUGINS=(
-  'https://github.com/monun/auto-reloader/releases/latest/download/AutoReloader.jar'
+  'https://github.com/monun/auto-reloader/releases/download/0.0.4/auto-reloader-0.0.4.jar'
 )
-
 ####################################################################
 
 # Check wget
 ! type -p wget >/dev/null && echo "wget not found" && exit
-
-# Check jq
-! type -p jq >/dev/null && echo "jq not found" && exit
 
 # Check java
 ! type -p java >/dev/null && echo "java not found" && exit
 
 # Create server directory and change
 mkdir -p "$NAME"
-cd "$NAME" || exit
 
-# Check local path
-if [[ -f $SERVER ]]; then
-  JAR=$SERVER
-# Setup server
-elif [[ -f ../setup.sh ]]; then
-  JAR=$(../setup.sh "$SERVER" | tail)
-else
-  JAR=$(curl -s "https://raw.githubusercontent.com/monun/minecraft-server-launcher/master/setup.sh" | bash -s -- "$SERVER" | tail)
+# Build paper for dev
+
+if [[ ! -f $NAME/$SERVER ]]; then
+  cd ".paper"
+  git reset --hard HEAD
+  ./gradlew clean rebuildPatches
+  ./gradlew applyPatchesa
+  ./gradlew createMojmapBundlerJar
+  cd ..
+
+  jarFile=$(find .paper/build/libs/ -type f -name "*.jar")
+  cp "$jarFile" "$NAME/$SERVER"
 fi
 
-# Exit if jar not found
-[[ ! -f $JAR ]] && echo "Jar not found for $SERVER - $JAR" && exit
+cd "$NAME" || exit
+
+JAR="$SERVER"
 
 # Download plugins (Only if it's not vanilla)
 if [[ $SERVER != vanilla* ]]; then
