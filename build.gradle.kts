@@ -19,11 +19,9 @@ dependencies {
     paperDevBundle("${Dependency.Paper.Version}-R0.1-SNAPSHOT")
 }
 
-val pluginName = rootProject.name.split('-').joinToString("") { it.capitalize() }
-
 extra.apply {
-    set("pluginName", pluginName)
-    set("packageName", rootProject.name.replace("-", ""))
+    set("pluginName", project.name.split('-').joinToString("") { it.capitalize() })
+    set("packageName", project.name.replace("-", ""))
     set("kotlinVersion", Dependency.Kotlin.Version)
 }
 
