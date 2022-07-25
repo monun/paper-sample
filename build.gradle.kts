@@ -16,8 +16,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
-
-    paperDevBundle("1.19-R0.1-SNAPSHOT")
+    paperDevBundle("${Dependency.Paper.Version}-R0.1-SNAPSHOT")
 }
 
 val pluginName = rootProject.name.split('-').joinToString("") { it.capitalize() }
