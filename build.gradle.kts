@@ -1,4 +1,5 @@
 plugins {
+    idea
     kotlin("jvm") version Dependency.Kotlin.Version
     id("io.papermc.paperweight.userdev") version "1.3.8"
 }
@@ -23,6 +24,23 @@ extra.apply {
     set("pluginName", project.name.split('-').joinToString("") { it.capitalize() })
     set("packageName", project.name.replace("-", ""))
     set("kotlinVersion", Dependency.Kotlin.Version)
+    set("paperVersion", Dependency.Paper.Version)
+}
+
+fun TaskContainerScope.registerUpdateTask(name: String, suffix: String, source: Any) = register<Copy>(name) {
+    val prefix = project.name
+    val plugins = file(".server/plugins-$suffix")
+    val update = File(plugins, "update")
+    val regex = Regex("($prefix).*(.jar)")
+
+    from(source)
+    into(if (plugins.listFiles { _, it -> it.matches(regex) }?.isNotEmpty() == true) update else plugins)
+
+    doFirst { update.deleteRecursively() }
+    doLast {
+        update.mkdirs()
+        File(update, "UPDATE").createNewFile()
+    }
 }
 
 tasks {
@@ -34,22 +52,16 @@ tasks {
         }
     }
 
-    register<Copy>("debugJar") {
-        from(jar)
+    val dev = registerUpdateTask("testDevJar", "dev", jar)
+    val reobf = registerUpdateTask("testReobfJar", "reobf", reobfJar)
 
-        val baseName = jar.get().archiveBaseName.get()
-        val pluginsDirectory = File(".debug-server/plugins")
-        val plugins = pluginsDirectory.listFiles { file: File -> file.isFile && file.name.endsWith(".jar") }
-            ?: emptyArray()
-
-        if (plugins.none { it.name.startsWith(baseName) }) into(plugins)
-        else {
-            val updateDirectory = File(pluginsDirectory, "update")
-            into(updateDirectory)
-            doLast {
-                File(updateDirectory, "UPDATE").createNewFile()
-            }
-        }
+    register("testJar") {
+        dependsOn(dev, reobf)
     }
 }
 
+idea {
+    module {
+        excludeDirs.add(file(".server"))
+    }
+}
