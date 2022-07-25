@@ -30,13 +30,13 @@ PORT=-1
 DEBUG_PORT=5005
 # Preinstallation plugins (url)
 DEFAULT_PLUGINS=(
-   'https://github.com/monun/auto-reloader/releases/download/0.0.4/auto-reloader-0.0.4.jar'
+   'https://github.com/monun/auto-reloader/releases/download/0.0.5/auto-reloader-0.0.5.jar'
 )
 
 #####################################################################
 
 # Build testJar
-[[ ! -d "$DIR/$PLUGINS" ]] && ./gradlew clean testJar
+[[ ! -d "$DIR/$PLUGINS" ]] && ./gradlew clean "test${classifier^}Jar"
 
 # Export variables for start.sh
 export SERVER
@@ -49,7 +49,6 @@ export PLUGINS
 export WORLDS
 export PORT
 export DEBUG_PORT
-export DEFAULT_PLUGINS
 
 mkdir -p "$DIR" && cd "$DIR" || exit
 
@@ -57,4 +56,4 @@ mkdir -p "$DIR" && cd "$DIR" || exit
 [[ ! -f startSetup ]] && wget -q -c --content-disposition -P . -N "https://raw.githubusercontent.com/monun/minecraft-server-launcher/master/startSetup"
 
 chmod +x ./startSetup
-./startSetup
+./startSetup "${DEFAULT_PLUGINS[@]}"

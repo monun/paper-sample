@@ -39,7 +39,7 @@ fun TaskContainerScope.registerUpdateTask(name: String, suffix: String, source: 
     doFirst { update.deleteRecursively() }
     doLast {
         update.mkdirs()
-        File(update, "UPDATE").createNewFile()
+        File(update, "RELOAD").delete()
     }
 }
 
