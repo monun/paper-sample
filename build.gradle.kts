@@ -1,3 +1,5 @@
+import org.gradle.configurationcache.extensions.capitalized
+
 plugins {
     idea
     kotlin("jvm") version Dependency.Kotlin.Version
@@ -27,22 +29,6 @@ extra.apply {
     set("paperVersion", Dependency.Paper.Version)
 }
 
-fun TaskContainerScope.registerUpdateTask(name: String, suffix: String, source: Any) = register<Copy>(name) {
-    val prefix = project.name
-    val plugins = file(".server/plugins-$suffix")
-    val update = File(plugins, "update")
-    val regex = Regex("($prefix).*(.jar)")
-
-    from(source)
-    into(if (plugins.listFiles { _, it -> it.matches(regex) }?.isNotEmpty() == true) update else plugins)
-
-    doFirst { update.deleteRecursively() }
-    doLast {
-        update.mkdirs()
-        File(update, "RELOAD").delete()
-    }
-}
-
 tasks {
     // generate plugin.yml
     processResources {
@@ -52,12 +38,28 @@ tasks {
         }
     }
 
-    val dev = registerUpdateTask("testDevJar", "dev", jar)
-    val reobf = registerUpdateTask("testReobfJar", "reobf", reobfJar)
+    fun registerJar(
+        classifier: String,
+        source: Any
+    ) = register<Copy>("test${classifier.capitalized()}Jar") {
+        from(source)
 
-    register("testJar") {
-        dependsOn(dev, reobf)
+        val prefix = project.name
+        val plugins = rootProject.file(".server/plugins-$classifier")
+        val update = File(plugins, "update")
+        val regex = Regex("($prefix).*(.jar)")
+
+        from(source)
+        into(if (plugins.listFiles { _, it -> it.matches(regex) }?.isNotEmpty() == true) update else plugins)
+
+        doLast {
+            update.mkdirs()
+            File(update, "RELOAD").delete()
+        }
     }
+
+    registerJar("dev", jar)
+    registerJar("reobf", reobfJar)
 }
 
 idea {
