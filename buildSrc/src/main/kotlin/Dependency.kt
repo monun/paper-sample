@@ -4,6 +4,6 @@ object Dependency {
     }
 
     object Paper {
-        const val Version = "1.19.2"
+        const val Version = "1.19.3"
     }
 }
