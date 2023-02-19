@@ -25,6 +25,7 @@ dependencies {
 //    implementation("io.github.monun:kommand-api:latest.release")
 //    implementation("io.github.monun:tap-api:latest.release")
 //    implementation("io.github.monun:invfx-api:latest.release")
+//    implementation("io.github.monun:heartbeat-coroutines:latest.release")
 }
 
 extra.apply {
