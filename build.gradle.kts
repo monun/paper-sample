@@ -3,7 +3,7 @@ import org.gradle.configurationcache.extensions.capitalized
 plugins {
     idea
     kotlin("jvm") version Dependency.Kotlin.Version
-    id("io.papermc.paperweight.userdev") version "1.5.1"
+    id("io.papermc.paperweight.userdev") version "1.5.3"
 }
 
 java {
@@ -16,7 +16,6 @@ repositories {
     mavenCentral()
 }
 
-@Suppress("GradlePackageVersionRange")
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
