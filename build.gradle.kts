@@ -19,14 +19,19 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
-    paperDevBundle("${Dependency.Paper.Version}-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("${Dependency.Paper.Version}-R0.1-SNAPSHOT")
+
+//    implementation("io.github.monun:kommand-api:latest.release")
+//    implementation("io.github.monun:tap-api:latest.release")
+//    implementation("io.github.monun:invfx-api:latest.release")
+//    implementation("io.github.monun:heartbeat-coroutines:latest.release")
 }
 
 extra.apply {
     set("pluginName", project.name.split('-').joinToString("") { it.capitalize() })
     set("packageName", project.name.replace("-", ""))
     set("kotlinVersion", Dependency.Kotlin.Version)
-    set("paperVersion", Dependency.Paper.Version)
+    set("paperVersion", Dependency.Paper.Version.split('.').take(2).joinToString("."))
 }
 
 tasks {
