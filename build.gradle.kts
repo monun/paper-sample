@@ -3,7 +3,7 @@ import org.gradle.configurationcache.extensions.capitalized
 plugins {
     idea
     kotlin("jvm") version Dependency.Kotlin.Version
-    id("io.papermc.paperweight.userdev") version "1.4.1"
+    id("io.papermc.paperweight.userdev") version "1.5.5"
 }
 
 java {
