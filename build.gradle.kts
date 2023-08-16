@@ -1,9 +1,14 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import io.papermc.paperweight.tasks.RemapJar
 import org.gradle.configurationcache.extensions.capitalized
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
+import java.util.*
 
 plugins {
     idea
-    kotlin("jvm") version Dependency.Kotlin.Version
-    id("io.papermc.paperweight.userdev") version "1.5.5"
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.paperweight)
+    alias(libs.plugins.shadow)
 }
 
 java {
@@ -14,12 +19,13 @@ java {
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
     implementation(kotlin("reflect"))
-    paperweight.paperDevBundle("${Dependency.Paper.Version}-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle(libs.versions.paper)
 
 //    implementation("io.github.monun:kommand-api:latest.release")
 //    implementation("io.github.monun:tap-api:latest.release")
@@ -28,10 +34,34 @@ dependencies {
 }
 
 extra.apply {
-    set("pluginName", project.name.split('-').joinToString("") { it.capitalize() })
+    set("pluginName", project.name.split('-').joinToString("") {
+        it.replaceFirstChar { char ->
+            if (char.isLowerCase()) char.titlecase(Locale.getDefault()) else char.toString()
+        }
+    })
     set("packageName", project.name.replace("-", ""))
-    set("kotlinVersion", Dependency.Kotlin.Version)
-    set("paperVersion", Dependency.Paper.Version.split('.').take(2).joinToString("."))
+    set("kotlinVersion", libs.versions.kotlin)
+    set("paperVersion", libs.versions.paper.get().split('.').take(2).joinToString("."))
+
+    val pluginLibraries = LinkedHashSet<String>()
+
+    configurations.findByName("implementation")?.allDependencies?.forEach { dependency ->
+        val group = dependency.group ?: error("group is null")
+        var name = dependency.name ?: error("name is null")
+        var version = dependency.version
+
+        if (group == "org.jetbrains.kotlin" && version == null) {
+            version = getKotlinPluginVersion()
+        } else if (group == "io.github.monun.tap" && name.endsWith("-api")) {
+            name = name.removeSuffix("api") + "core"
+        }
+
+        requireNotNull(version) { "version is null" }
+        require(version != "latest.release") { "version is latest.release" }
+
+        pluginLibraries += "$group:$name:$version"
+        set("pluginLibraries", pluginLibraries.joinToString("\n  ") { "- $it" })
+    }
 }
 
 tasks {
@@ -43,28 +73,66 @@ tasks {
         }
     }
 
-    fun registerJar(
-        classifier: String,
-        source: Any
-    ) = register<Copy>("test${classifier.capitalized()}Jar") {
-        from(source)
+    fun registerJar(name: String, bundle: Boolean) {
+        val taskName = name + "Jar"
 
-        val prefix = project.name
-        val plugins = rootProject.file(".server/plugins-$classifier")
-        val update = File(plugins, "update")
-        val regex = Regex("($prefix).*(.jar)")
+        register<ShadowJar>(taskName) {
+            archiveClassifier.set(name)
+            archiveAppendix.set(if (bundle) "bundle" else "clip")
 
-        from(source)
-        into(if (plugins.listFiles { _, it -> it.matches(regex) }?.isNotEmpty() == true) update else plugins)
+            from(sourceSets["main"].output)
 
-        doLast {
-            update.mkdirs()
-            File(update, "RELOAD").delete()
+            if (bundle) {
+                configurations = listOf(
+                    project.configurations.runtimeClasspath.get()
+                )
+                exclude("clip-plugin.yml")
+                rename("bundle-plugin.yml", "plugin.yml")
+            } else {
+                exclude("bundle-plugin.yml")
+                rename("clip-plugin.yml", "plugin.yml")
+            }
+
+            doLast {
+                val plugins = rootProject.file(".server/plugins-$name")
+                val update = plugins.resolve("update")
+
+                copy {
+                    from(archiveFile)
+
+                    if (plugins.resolve(archiveFileName.get()).exists())
+                        into(update)
+                    else
+                        into(plugins)
+                }
+
+                update.resolve("UPDATE").deleteOnExit()
+            }
         }
     }
-
-    registerJar("dev", jar)
-    registerJar("reobf", reobfJar)
+//
+//    fun registerJar(
+//        classifier: String,
+//        source: Any
+//    ) = register<Copy>("test${classifier.capitalized()}Jar") {
+//        from(source)
+//
+//        val prefix = project.name
+//        val plugins = rootProject.file(".server/plugins-$classifier")
+//        val update = File(plugins, "update")
+//        val regex = Regex("($prefix).*(.jar)")
+//
+//        from(source)
+//        into(if (plugins.listFiles { _, it -> it.matches(regex) }?.isNotEmpty() == true) update else plugins)
+//
+//        doLast {
+//            update.mkdirs()
+//            File(update, "RELOAD").delete()
+//        }
+//    }
+//
+//    registerJar("dev", jar)
+//    registerJar("reobf", reobfJar)
 }
 
 idea {
